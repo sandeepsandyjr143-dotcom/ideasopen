@@ -51,7 +51,7 @@ export default function AdGate({ isOpen, onClose, onUnlock, ideaTitle }) {
                 <Play size={28} className="text-primary ml-1" />
               </div>
               <h4 className="font-poppins font-semibold text-secondary text-base sm:text-lg mb-2">
-                Watch 30 Seconds to Unlock
+                Watch Ad to Unlock
               </h4>
               <p className="text-gray-500 text-sm mb-5">
                 Support us by watching a short ad to access this content for free!

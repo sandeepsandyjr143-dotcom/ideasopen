@@ -4,8 +4,10 @@ import { Eye, Download, ExternalLink, Share2, Copy, Check, Lock, RefreshCw, Aler
 import AdGate from '../components/AdGate';
 import IdeaCard from '../components/IdeaCard';
 import SkeletonCard from '../components/SkeletonCard';
+import Seo from '../components/Seo';
 import { supabase } from '../lib/supabase';
 import { isUnlocked, markAsUnlocked, incrementViewCount, incrementUnlockCount } from '../lib/adHelper';
+import { normalizeContent } from '../lib/contentUtils';
 
 export default function IdeaDetail() {
   const { slug } = useParams();
@@ -18,11 +20,15 @@ export default function IdeaDetail() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (slug) { fetchIdea(); setUnlocked(isUnlocked(slug)); }
+    if (slug) {
+      setUnlocked(isUnlocked(slug));
+      fetchIdea();
+    }
   }, [slug]);
 
   const fetchIdea = async () => {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase.from('ideas').select('*').eq('slug', slug).single();
       if (error) throw error;
@@ -31,21 +37,23 @@ export default function IdeaDetail() {
         return;
       }
       setIdea(data);
-      if (data) {
-        incrementViewCount(supabase, data.id, data.view_count || 0);
-        fetchRelated(data.section || 'business', data.category || 'Uncategorized', data.id);
-      }
+      incrementViewCount(supabase, data.id, data.view_count || 0);
+      fetchRelated(data.section || 'business', data.category || 'Uncategorized', data.id);
     } catch (err) {
       setError('Idea not found or failed to load.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchRelated = async (section, category, excludeId) => {
     try {
       const { data } = await supabase.from('ideas').select('*').eq('section', section).eq('status', 'published').neq('id', excludeId).limit(4);
-      const validIdeas = (data || []).filter(i => i && i.id && i.slug);
+      const validIdeas = (data || []).filter((i) => i && i.id && i.slug);
       setRelatedIdeas(validIdeas);
-    } catch {}
+    } catch (err) {
+      console.error('Fetch related failed:', err);
+    }
   };
 
   const handleUnlock = () => {
@@ -69,7 +77,9 @@ export default function IdeaDetail() {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
   };
 
   if (loading) {
@@ -103,15 +113,28 @@ export default function IdeaDetail() {
 
   const isFutureFeed = idea.section === 'futurefeed';
   const accentBg = isFutureFeed ? 'bg-secondary' : 'bg-primary';
+  const contentHtml = normalizeContent(typeof idea.full_details === 'string' ? idea.full_details : '');
+  const pageUrl = `https://ideasopen.in/idea/${idea.slug}`;
 
   return (
     <div className={`min-h-screen pb-20 md:pb-8 ${isFutureFeed ? 'bg-secondary/5' : 'bg-background'}`}>
+      <Seo
+        title={`${idea.title} | IdeasOpen`}
+        description={idea.short_description || 'Unlock a premium idea on IdeasOpen.'}
+        url={pageUrl}
+        image={idea.thumbnail_url || 'https://ideasopen.in/og-image.jpg'}
+        type="article"
+        publishedTime={idea.date_order || undefined}
+        tags={[idea.category, idea.section, ...(idea.tags || [])]}
+      />
+
       <div className="max-w-3xl mx-auto px-4">
-        {/* Thumbnail */}
         <div className="relative rounded-b-2xl overflow-hidden mb-4">
           <img
             src={idea.thumbnail_url || 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=800&q=80'}
             alt={idea.title}
+            loading="lazy"
+            decoding="async"
             className={`w-full aspect-video object-cover ${!unlocked ? 'blur-md scale-105' : ''} transition-all duration-500`}
           />
           {!unlocked && (
@@ -121,13 +144,12 @@ export default function IdeaDetail() {
                 onClick={() => setShowAdGate(true)}
                 className={`flex items-center gap-2 px-6 py-3 ${accentBg} text-white font-semibold rounded-xl hover:opacity-90 active:scale-[0.97] transition-all min-h-[48px] shadow-lg text-sm sm:text-base`}
               >
-                Watch 30 Sec to Unlock
+                Watch Ad to Unlock
               </button>
             </div>
           )}
         </div>
 
-        {/* Meta */}
         <div className="flex items-center gap-3 mb-3 flex-wrap">
           <span className={`px-3 py-1 text-xs font-medium rounded-full ${accentBg} text-white`}>
             {idea.category}
@@ -141,15 +163,18 @@ export default function IdeaDetail() {
           </div>
         </div>
 
-        {/* Title */}
         <h1 className="font-poppins font-bold text-xl sm:text-2xl text-secondary mb-2 leading-snug">{idea.title}</h1>
         <p className="text-gray-600 text-sm sm:text-base mb-4">{idea.short_description}</p>
 
-        {/* Content */}
         {unlocked ? (
           <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm mb-5">
-            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed text-sm sm:text-base">
-              <div dangerouslySetInnerHTML={{ __html: idea.full_details?.replace(/\n/g, '<br/>') || '' }} />
+            <div className="content-body prose prose-sm max-w-none text-gray-700 leading-relaxed text-sm sm:text-base ql-editor" style={{
+              fontSize: 'inherit',
+              padding: 0,
+              border: 'none',
+              background: 'none'
+            }}>
+              <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
             </div>
             {idea.external_link && (
               <a
@@ -184,8 +209,7 @@ export default function IdeaDetail() {
           </div>
         )}
 
-        {/* Share */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-6">
           <button
             onClick={handleShare}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white font-medium rounded-xl hover:bg-green-600 active:scale-[0.97] transition-all min-h-[48px] text-sm"
@@ -211,7 +235,6 @@ export default function IdeaDetail() {
           </button>
         )}
 
-        {/* Related */}
         {relatedIdeas.length > 0 && (
           <div className="mb-8">
             <h2 className="font-poppins font-semibold text-secondary text-base sm:text-lg mb-3">You Might Also Like</h2>

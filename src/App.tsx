@@ -10,6 +10,7 @@ const IdeaDetail = lazy(() => import('./pages/IdeaDetail'));
 const Search = lazy(() => import('./pages/Search'));
 const Admin = lazy(() => import('./pages/Admin'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
                     <Route path="/futurefeed" element={<FutureFeed />} />
                     <Route path="/idea/:slug" element={<IdeaDetail />} />
                     <Route path="/search" element={<Search />} />
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                   <BottomNav />
                 </>

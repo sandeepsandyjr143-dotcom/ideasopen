@@ -12,9 +12,17 @@ const BUSINESS_CATEGORIES = ['Franchise', 'Startup', 'Manufacturing', 'Low Inves
 const FUTUREFEED_CATEGORIES = ['Apps', 'AI Tools', 'APK', 'Courses', 'Resources', 'Dev Tools'];
 
 const EMPTY_FORM = {
-  title: '', slug: '', section: 'business', category: 'Franchise',
-  thumbnail_url: '', short_description: '', full_details: '',
-  external_link: '', tags: '', status: 'draft', date_order: ''
+  title: '',
+  slug: '',
+  section: 'business',
+  category: 'Franchise',
+  thumbnail_url: '',
+  short_description: '',
+  full_details: '',
+  external_link: '',
+  tags: '',
+  status: 'draft',
+  date_order: ''
 };
 
 function ConfirmDialog({ message, onConfirm, onCancel }) {
@@ -195,6 +203,8 @@ export default function Admin() {
     }
   };
 
+
+
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -262,17 +272,19 @@ export default function Admin() {
 
   const handleEdit = (idea) => {
     setEditingIdea(idea);
+    const fullDetails = typeof idea.full_details === 'string' ? idea.full_details : '';
+    const tags = Array.isArray(idea.tags) ? idea.tags.join(', ') : (typeof idea.tags === 'string' ? idea.tags : '');
     setFormData({
-      title: idea.title || '',
-      slug: idea.slug || '',
-      section: idea.section || 'business',
-      category: idea.category || 'Franchise',
-      thumbnail_url: idea.thumbnail_url || '',
-      short_description: idea.short_description || '',
-      full_details: idea.full_details || '',
-      external_link: idea.external_link || '',
-      tags: idea.tags?.join(', ') || '',
-      status: idea.status || 'draft',
+      title: String(idea.title || ''),
+      slug: String(idea.slug || ''),
+      section: String(idea.section || 'business'),
+      category: String(idea.category || 'Franchise'),
+      thumbnail_url: String(idea.thumbnail_url || ''),
+      short_description: String(idea.short_description || ''),
+      full_details: fullDetails,
+      external_link: String(idea.external_link || ''),
+      tags: tags,
+      status: String(idea.status || 'draft'),
       date_order: formatForDatetimeLocal(idea.date_order),
     });
     setFormErrors({});
@@ -495,14 +507,15 @@ export default function Admin() {
 
                 <FormField label="Full Details / Content">
                   <textarea
-                    value={formData.full_details}
+                    value={formData.full_details || ''}
                     onChange={(e) => setFormData((p) => ({ ...p, full_details: e.target.value }))}
-                    rows={8}
-                    placeholder="Full content shown after unlock. Supports basic HTML..."
-                    className={`${inputClass} resize-y`}
+                    rows={10}
+                    placeholder="Enter full details (URLs will become clickable links, image URLs will display as images)"
+                    className={`${inputClass} resize-vertical font-sans`}
                     style={{ fontSize: '16px' }}
                   />
-                  <p className="text-gray-400 text-xs mt-1">{formData.full_details.length} characters</p>
+                  <p className="text-gray-400 text-xs mt-1">{(formData.full_details || '').length} characters</p>
+                  <p className="text-gray-400 text-xs mt-1">💡 Tip: Paste image URLs on their own line to display images. Any URL starting with http/https will become clickable.</p>
                 </FormField>
 
                 <FormField label="External Link (Optional)">

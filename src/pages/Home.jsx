@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Cpu, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import Seo from '../components/Seo';
 import IdeaCard from '../components/IdeaCard';
 import SkeletonCard from '../components/SkeletonCard';
 import { supabase } from '../lib/supabase';
@@ -35,6 +36,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-8">
+      <Seo
+        title="IdeasOpen — Business Ideas, Tech Resources & More"
+        description="Discover free business ideas, startup guides, AI tools, APK downloads, and premium resources. Watch an ad to unlock any idea instantly."
+        url="https://ideasopen.in/"
+        image="https://ideasopen.in/og-image.jpg"
+        tags={[ 'business ideas', 'startup ideas', 'AI tools', 'passive income', 'tech resources' ]}
+      />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary via-[#D55500] to-[#C04400] px-4 py-10 sm:py-14 text-center">
         <div className="max-w-2xl mx-auto">
