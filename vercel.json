@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!.*\\.(?:js|json|css|svg|png|jpg|jpeg|gif|ico|xml|txt|webmanifest)$).*)",
+      "destination": "/index.html"
+    }
   ],
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://xtydwpklgmgyxpggnujr.supabase.co",
